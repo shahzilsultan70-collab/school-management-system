@@ -28,11 +28,6 @@ export class UpdateFeeDto {
   totalAmount?: number;
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  paidAmount?: number;
-
-  @IsOptional()
   @IsDateString()
   dueDate?: string;
 

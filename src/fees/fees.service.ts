@@ -62,7 +62,7 @@ export class FeesService {
       .find()
       .populate({
         path: 'studentId',
-        select: 'name email role',
+        select: 'firstName lastName email role',
       })
       .sort({ createdAt: -1 })
       .exec();
@@ -77,7 +77,7 @@ export class FeesService {
       .findById(id)
       .populate({
         path: 'studentId',
-        select: 'name email role',
+        select: 'firstName lastName email role',
       })
       .exec();
 
@@ -99,7 +99,7 @@ export class FeesService {
       })
       .populate({
         path: 'studentId',
-        select: 'name email role',
+        select: 'firstName lastName email role',
       })
       .sort({ createdAt: -1 })
       .exec();
@@ -116,40 +116,37 @@ export class FeesService {
       throw new NotFoundException('Fee record not found');
     }
 
-    const totalAmount = updateFeeDto.totalAmount ?? fee.totalAmount;
+    /*
+     * Financially processed fees are locked.
+     *
+     * Stripe/payment webhooks are responsible for
+     * changing paidAmount, remainingAmount and status.
+     */
+    if (
+      fee.status === PaymentStatus.PAID ||
+      fee.status === PaymentStatus.PARTIAL
+    ) {
+      throw new BadRequestException(
+        'Paid or partially paid fees cannot be edited',
+      );
+    }
 
-    const paidAmount = updateFeeDto.paidAmount ?? fee.paidAmount;
+    const totalAmount = updateFeeDto.totalAmount ?? fee.totalAmount;
 
     if (totalAmount <= 0) {
       throw new BadRequestException('Total fee amount must be greater than 0');
     }
 
-    if (paidAmount < 0) {
-      throw new BadRequestException('Paid amount cannot be negative');
-    }
-
-    if (paidAmount > totalAmount) {
-      throw new BadRequestException(
-        'Paid amount cannot be greater than total fee amount',
-      );
-    }
-
-    const remainingAmount = totalAmount - paidAmount;
-
-    let status: PaymentStatus;
-
-    if (paidAmount === 0) {
-      status = PaymentStatus.PENDING;
-    } else if (paidAmount < totalAmount) {
-      status = PaymentStatus.PARTIAL;
-    } else {
-      status = PaymentStatus.PAID;
-    }
-
     fee.totalAmount = totalAmount;
-    fee.paidAmount = paidAmount;
-    fee.remainingAmount = remainingAmount;
-    fee.status = status;
+
+    /*
+     * Pending fee has no successful payment yet.
+     */
+    fee.paidAmount = 0;
+
+    fee.remainingAmount = totalAmount;
+
+    fee.status = PaymentStatus.PENDING;
 
     if (updateFeeDto.feeType !== undefined) {
       fee.feeType = updateFeeDto.feeType;
@@ -187,11 +184,22 @@ export class FeesService {
       throw new BadRequestException('Invalid fee ID');
     }
 
-    const fee = await this.feeModel.findByIdAndDelete(id);
+    const fee = await this.feeModel.findById(id);
 
     if (!fee) {
       throw new NotFoundException('Fee record not found');
     }
+
+    if (
+      fee.status === PaymentStatus.PAID ||
+      fee.status === PaymentStatus.PARTIAL
+    ) {
+      throw new BadRequestException(
+        'Paid or partially paid fees cannot be deleted',
+      );
+    }
+
+    await this.feeModel.findByIdAndDelete(id);
 
     return {
       message: 'Fee record deleted successfully',

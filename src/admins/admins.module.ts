@@ -3,7 +3,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { AdminsController } from './admins.controller';
 import { AdminsService } from './admins.service';
-
 import { Admin, AdminSchema } from './schemas/admin.schema';
 
 @Module({
@@ -15,9 +14,8 @@ import { Admin, AdminSchema } from './schemas/admin.schema';
       },
     ]),
   ],
-
   controllers: [AdminsController],
-
   providers: [AdminsService],
+  exports: [AdminsService],
 })
 export class AdminsModule {}

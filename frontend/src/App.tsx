@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { useAuth } from './context/AuthContext';
@@ -7,8 +8,23 @@ import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/dashboard/Dashboard';
 import Login from './pages/auth/Login';
 import Students from './pages/students/Students';
+import Teachers from './pages/teacher/Teachers';
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+import Fees from './pages/fees/Fees';
+import CreateFee from './pages/fees/CreateFee';
+import EditFee from './pages/fees/EditFee';
+import FeeDetails from './pages/fees/FeeDetails';
+
+import Payments from './pages/payments/Payments';
+import PaymentDetails from './pages/payments/PaymentDetails';
+import PaymentReceipt from './pages/payments/PaymentReceipt';
+import PaymentSuccess from './pages/payments/PaymentSuccess';
+import PaymentCancel from './pages/payments/PaymentCancel';
+import Subscriptions from './pages/payments/Subscriptions';
+
+import AdminPayments from './pages/admin/AdminPayments';
+
+function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
@@ -18,7 +34,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return children;
 }
 
-function PublicRoute({ children }: { children: React.ReactNode }) {
+function PublicRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
@@ -32,9 +48,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ================================
-            PUBLIC ROUTES
-        ================================= */}
+        {/* PUBLIC */}
 
         <Route
           path="/login"
@@ -45,9 +59,7 @@ function App() {
           }
         />
 
-        {/* ================================
-            PROTECTED APPLICATION
-        ================================= */}
+        {/* PROTECTED */}
 
         <Route
           element={
@@ -56,17 +68,15 @@ function App() {
             </ProtectedRoute>
           }
         >
-          {/* Dashboard */}
           <Route path="/dashboard" element={<Dashboard />} />
 
-          {/* Students */}
+          {/* People */}
+
           <Route path="/students" element={<Students />} />
 
-          {/* Temporary routes */}
-          <Route
-            path="/teachers"
-            element={<PlaceholderPage title="Teachers" />}
-          />
+          <Route path="/teachers" element={<Teachers />} />
+
+          {/* Academics */}
 
           <Route path="/admins" element={<PlaceholderPage title="Admins" />} />
 
@@ -92,7 +102,35 @@ function App() {
             element={<PlaceholderPage title="Results" />}
           />
 
-          <Route path="/fees" element={<PlaceholderPage title="Fees" />} />
+          {/* FEES */}
+
+          <Route path="/fees" element={<Fees />} />
+
+          <Route path="/fees/create" element={<CreateFee />} />
+
+          <Route path="/fees/:id/edit" element={<EditFee />} />
+
+          <Route path="/fees/:id" element={<FeeDetails />} />
+
+          {/* STUDENT PAYMENTS */}
+
+          <Route path="/payments/success" element={<PaymentSuccess />} />
+
+          <Route path="/payments/cancel" element={<PaymentCancel />} />
+
+          <Route path="/payments" element={<Payments />} />
+
+          <Route path="/payments/subscriptions" element={<Subscriptions />} />
+
+          <Route path="/payments/:id/receipt" element={<PaymentReceipt />} />
+
+          <Route path="/payments/:id" element={<PaymentDetails />} />
+
+          {/* ADMIN PAYMENTS */}
+
+          <Route path="/admin/payments" element={<AdminPayments />} />
+
+          {/* Other modules */}
 
           <Route path="/leaves" element={<PlaceholderPage title="Leaves" />} />
 
@@ -111,10 +149,6 @@ function App() {
             element={<PlaceholderPage title="Settings" />}
           />
         </Route>
-
-        {/* ================================
-            DEFAULT ROUTES
-        ================================= */}
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
